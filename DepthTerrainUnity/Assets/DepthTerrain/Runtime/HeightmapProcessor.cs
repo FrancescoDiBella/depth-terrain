@@ -249,8 +249,15 @@ namespace DepthTerrain
         /// <summary>
         /// Bake a tangent-space normal map Texture2D from the processed [z, x] heightmap
         /// to add crisp micro-relief shading to URP Terrain Lit layers.
+        /// Set <paramref name="packDxt5nm"/> to true when binding directly to Unity runtime URP shaders on desktop/Metal.
         /// </summary>
-        public static Texture2D GenerateNormalMap(float[,] heights, float terrainSize, float terrainHeight, float strength = 1.5f)
+        public static Texture2D GenerateNormalMap(
+            float[,] heights,
+            float terrainSize,
+            float terrainHeight,
+            float strength = 1.5f,
+            bool packDxt5nm = false
+        )
         {
             int n = heights.GetLength(0);
             var tex = new Texture2D(n, n, TextureFormat.RGBA32, mipChain: true, linear: true)
@@ -279,10 +286,12 @@ namespace DepthTerrain
                     float dhdz = (heights[zp, x] - heights[zm, x]) * 0.5f * scale;
 
                     var normal = new Vector3(-dhdx, -dhdz, 1f).normalized;
-                    byte r = (byte)Mathf.RoundToInt((normal.x * 0.5f + 0.5f) * 255f);
-                    byte g = (byte)Mathf.RoundToInt((normal.y * 0.5f + 0.5f) * 255f);
-                    byte b = (byte)Mathf.RoundToInt((normal.z * 0.5f + 0.5f) * 255f);
-                    pixels[rowOff + x] = new Color32(r, g, b, 255);
+                    byte nx = (byte)Mathf.RoundToInt((normal.x * 0.5f + 0.5f) * 255f);
+                    byte ny = (byte)Mathf.RoundToInt((normal.y * 0.5f + 0.5f) * 255f);
+                    byte nz = (byte)Mathf.RoundToInt((normal.z * 0.5f + 0.5f) * 255f);
+                    pixels[rowOff + x] = packDxt5nm
+                        ? new Color32(255, ny, 255, nx)
+                        : new Color32(nx, ny, nz, 255);
                 }
             }
 

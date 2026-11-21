@@ -70,7 +70,7 @@ namespace DepthTerrain
 
         [Tooltip("Number of separable 3x3 Gaussian smoothing passes (0 = raw Depth Pro 2 detail).")]
         [Range(0, 12)]
-        public int smoothingPasses = 1;
+        public int smoothingPasses = 2;
 
         [Tooltip("Contrast/elevation curve exponent (< 1 boosts midtones/plateaus, > 1 sharpens peaks).")]
         [Range(0.3f, 3.0f)]
@@ -93,7 +93,7 @@ namespace DepthTerrain
 
         [Tooltip("Strength of procedural normal map baked from the Depth Pro 2 heightmap.")]
         [Range(0f, 4f)]
-        public float normalMapStrength = 1.4f;
+        public float normalMapStrength = 0.5f;
 
         [Tooltip("Smoothly fall off terrain edges to zero for clean diorama/island presentation.")]
         public bool edgeFalloff;

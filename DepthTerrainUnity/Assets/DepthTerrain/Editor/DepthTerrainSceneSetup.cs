@@ -15,6 +15,7 @@ namespace DepthTerrain.Editor
     {
         public const string ShowcaseScenePath = "Assets/Scenes/DepthTerrainShowcase.unity";
         public const string VolumeProfilePath = "Assets/DepthTerrain/DepthTerrainVolumeProfile.asset";
+        public const string SkyboxMaterialPath = "Assets/DepthTerrain/DepthTerrainSkybox.mat";
 
         [MenuItem("Tools/Depth Terrain/Create Showcase Scene", priority = 20)]
         public static DepthTerrainController CreateOrUpdateShowcaseSceneMenu()
@@ -26,26 +27,28 @@ namespace DepthTerrain.Editor
         {
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
-            // Atmospheric fog for depth perception across mountain ranges & canyons
+            // Procedural Skybox + crisp daylight atmospheric fog
+            RenderSettings.skybox = GetOrCreateSkyboxMaterial();
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
-            RenderSettings.fogColor = new Color(0.66f, 0.76f, 0.86f, 1f);
-            RenderSettings.fogDensity = 0.00055f;
+            RenderSettings.fogColor = new Color(0.74f, 0.84f, 0.94f, 1f);
+            RenderSettings.fogDensity = 0.00034f;
             RenderSettings.ambientMode = AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = new Color(0.55f, 0.68f, 0.85f, 1f);
-            RenderSettings.ambientEquatorColor = new Color(0.45f, 0.48f, 0.50f, 1f);
-            RenderSettings.ambientGroundColor = new Color(0.24f, 0.22f, 0.20f, 1f);
+            RenderSettings.ambientSkyColor = new Color(0.60f, 0.74f, 0.90f, 1f);
+            RenderSettings.ambientEquatorColor = new Color(0.52f, 0.56f, 0.60f, 1f);
+            RenderSettings.ambientGroundColor = new Color(0.28f, 0.26f, 0.24f, 1f);
 
             // Golden-hour Directional Sun Light to sculpt 3D terrain shadows dramatically
             var sunGo = new GameObject("Directional Sun");
             var sunLight = sunGo.AddComponent<Light>();
             sunLight.type = LightType.Directional;
-            sunLight.color = new Color(1.0f, 0.94f, 0.84f, 1f);
-            sunLight.intensity = 2.2f;
+            sunLight.color = new Color(1.0f, 0.95f, 0.87f, 1f);
+            sunLight.intensity = 2.0f;
             sunLight.shadows = LightShadows.Soft;
-            sunLight.shadowStrength = 0.82f;
-            sunGo.transform.rotation = Quaternion.Euler(34f, -42f, 0f);
+            sunLight.shadowStrength = 0.78f;
+            sunGo.transform.rotation = Quaternion.Euler(36f, -42f, 0f);
             RenderSettings.sun = sunLight;
+            DynamicGI.UpdateEnvironment();
 
             // Main Camera with OrbitFlyCamera + URP camera data
             var camGo = new GameObject("Main Camera") { tag = "MainCamera" };
@@ -101,6 +104,30 @@ namespace DepthTerrain.Editor
             }
 
             return controller;
+        }
+
+        private static Material GetOrCreateSkyboxMaterial()
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<Material>(SkyboxMaterialPath);
+            if (existing != null)
+                return existing;
+
+            EnsureDirectory(Path.GetDirectoryName(SkyboxMaterialPath));
+            var shader = Shader.Find("Skybox/Procedural") ?? Shader.Find("Skybox/6 Sided");
+            var mat = new Material(shader) { name = "DepthTerrainSkybox" };
+            if (shader != null && shader.name == "Skybox/Procedural")
+            {
+                mat.SetFloat("_SunDisk", 2f);
+                mat.SetFloat("_SunSize", 0.04f);
+                mat.SetFloat("_SunSizeConvergence", 5f);
+                mat.SetFloat("_AtmosphereThickness", 0.85f);
+                mat.SetColor("_SkyTint", new Color(0.42f, 0.58f, 0.78f, 1f));
+                mat.SetColor("_GroundColor", new Color(0.32f, 0.35f, 0.40f, 1f));
+                mat.SetFloat("_Exposure", 1.15f);
+            }
+            AssetDatabase.CreateAsset(mat, SkyboxMaterialPath);
+            AssetDatabase.SaveAssets();
+            return mat;
         }
 
         private static VolumeProfile GetOrCreateVolumeProfile()
