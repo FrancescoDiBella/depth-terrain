@@ -96,7 +96,7 @@ namespace DepthTerrain
             terrain.basemapDistance = Mathf.Max(2000f, settings.terrainSize * 3f);
             terrain.drawInstanced = true;
 
-            // Generate procedural normal map from heightfield for crisp relief micro-shading
+            // Generate procedural normal map from heightfield (DXT5nm packed for URP runtime Terrain Lit)
             Texture2D normalMap = null;
             if (settings.normalMapStrength > 0.001f)
             {
@@ -104,9 +104,14 @@ namespace DepthTerrain
                     processedHeights,
                     settings.terrainSize,
                     settings.terrainHeight,
-                    settings.normalMapStrength
+                    settings.normalMapStrength,
+                    packDxt5nm: true
                 );
             }
+
+            // Matte URP Terrain MaskMap (R=Metallic 0, G=AO 1, B=Height 0, A=Smoothness 0.08)
+            // Prevents URP Terrain/Lit from reading opaque PNG alpha (1.0) as mirror-glossy smoothness!
+            var matteMask = CreateMatteTerrainMaskTexture(smoothness: 0.08f);
 
             // Configure single full-footprint TerrainLayer mapping top-down albedo 1:1 to terrain bounds
             var layer = new TerrainLayer
@@ -114,11 +119,13 @@ namespace DepthTerrain
                 name = "DepthPro2_AlbedoLayer",
                 diffuseTexture = albedoTexture,
                 normalMapTexture = normalMap,
+                maskMapTexture = matteMask,
                 normalScale = settings.normalMapStrength,
                 tileSize = new Vector2(settings.terrainSize, settings.terrainSize),
                 tileOffset = Vector2.zero,
-                smoothness = 0.14f,
-                metallic = 0.0f
+                smoothness = 0.08f,
+                metallic = 0.0f,
+                specular = new Color(0.04f, 0.04f, 0.04f, 1f)
             };
 
             terrainData.alphamapResolution = 64;
@@ -176,6 +183,26 @@ namespace DepthTerrain
             water.transform.localPosition = new Vector3(0f, waterY, 0f);
             water.transform.localScale = new Vector3(scaleXZ, 1f, scaleXZ);
             return water;
+        }
+
+        private static Texture2D _sharedMatteMask;
+
+        private static Texture2D CreateMatteTerrainMaskTexture(float smoothness = 0.08f)
+        {
+            if (_sharedMatteMask != null)
+                return _sharedMatteMask;
+
+            byte s = (byte)Mathf.RoundToInt(Mathf.Clamp01(smoothness) * 255f);
+            var tex = new Texture2D(2, 2, TextureFormat.RGBA32, mipChain: false, linear: true)
+            {
+                name = "DepthPro2_MatteMaskMap",
+                wrapMode = TextureWrapMode.Repeat
+            };
+            var c = new Color32(0, 255, 0, s);
+            tex.SetPixels32(new[] { c, c, c, c });
+            tex.Apply(false, false);
+            _sharedMatteMask = tex;
+            return tex;
         }
 
         public static Material CreateUrpWaterMaterial()

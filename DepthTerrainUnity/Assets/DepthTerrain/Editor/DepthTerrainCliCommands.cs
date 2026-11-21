@@ -26,6 +26,7 @@ namespace DepthTerrain.Editor
             [CliArg("dataset", "Preset name in StreamingAssets/DepthTerrainSamples or absolute path")] string dataset,
             [CliArg("height", "Optional terrain elevation scale in meters (<= 0 uses preset recommendation)")] float height = -1f,
             [CliArg("water", "Optional water level [0..0.75] (< 0 uses preset recommendation)")] float water = -1f,
+            [CliArg("falloff", "Enable island edge falloff")] bool falloff = false,
             [CliArg("save", "Save active scene after loading")] bool save = false
         )
         {
@@ -49,6 +50,11 @@ namespace DepthTerrain.Editor
             {
                 ctrl.buildSettings.waterLevel = water;
                 ctrl.buildSettings.showWaterPlane = water > 0.005f;
+                dirty = true;
+            }
+            if (ctrl.buildSettings.edgeFalloff != falloff)
+            {
+                ctrl.buildSettings.edgeFalloff = falloff;
                 dirty = true;
             }
             if (dirty)
