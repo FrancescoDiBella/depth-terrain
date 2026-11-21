@@ -1,0 +1,33 @@
+[project]
+name = "depth-terrain"
+version = "0.1.0"
+description = "Apple Depth Pro 2 monocular depth estimation pipeline for Unity 6 Terrain reconstruction (real maps, aerial images, video, and fictional worlds)"
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "depth-pro-2 @ git+https://github.com/apple-aiml-research/ml-depth-pro-2.git",
+    "click>=8.1",
+    "matplotlib>=3.9",
+    "numpy>=1.26",
+    "pillow>=11.3",
+    "requests>=2.32",
+    "scipy>=1.13",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[project.scripts]
+depth-terrain = "depth_terrain.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
