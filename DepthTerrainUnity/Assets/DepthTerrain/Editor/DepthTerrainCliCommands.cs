@@ -30,7 +30,7 @@ namespace DepthTerrain.Editor
             [CliArg("save", "Save active scene after loading")] bool save = false
         )
         {
-            var ctrl = Object.FindFirstObjectByType<DepthTerrainController>();
+            var ctrl = Object.FindAnyObjectByType<DepthTerrainController>();
             if (ctrl == null)
             {
                 ctrl = DepthTerrainSceneSetup.CreateOrUpdateShowcaseScene(dataset, saveScene: save);
@@ -83,8 +83,8 @@ namespace DepthTerrain.Editor
             [CliArg("distance", "Distance from terrain center (<= 0 auto-fits)")] float distance = -1f
         )
         {
-            var ctrl = Object.FindFirstObjectByType<DepthTerrainController>();
-            var cam = Object.FindFirstObjectByType<OrbitFlyCamera>();
+            var ctrl = Object.FindAnyObjectByType<DepthTerrainController>();
+            var cam = Object.FindAnyObjectByType<OrbitFlyCamera>();
             if (cam == null) return "No OrbitFlyCamera found in scene.";
 
             float size = ctrl != null ? ctrl.buildSettings.terrainSize : 500f;
@@ -106,7 +106,7 @@ namespace DepthTerrain.Editor
             [CliArg("height", "Image height in pixels")] int height = 720
         )
         {
-            var cam = Camera.main ?? Object.FindFirstObjectByType<Camera>();
+            var cam = Camera.main ?? Object.FindAnyObjectByType<Camera>();
             if (cam == null) return "No Camera found in scene.";
 
             var rt = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32);

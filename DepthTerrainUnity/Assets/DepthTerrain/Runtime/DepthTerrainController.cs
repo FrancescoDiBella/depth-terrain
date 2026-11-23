@@ -1,15 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace DepthTerrain
 {
     /// <summary>
     /// Scene-level orchestrator that loads Apple Depth Pro 2 terrain bundles (from StreamingAssets presets
-    /// or live pipeline runs), applies real-time non-destructive terrain shaping, and supports aerial video frame playback.
+    /// or live pipeline runs), applies real-time non-destructive terrain shaping, exposes C# build timings,
+    /// and supports aerial video frame playback.
     /// </summary>
     [ExecuteAlways]
     public class DepthTerrainController : MonoBehaviour
@@ -34,12 +37,19 @@ namespace DepthTerrain
         public DepthTerrainMetadata CurrentMetadata { get; private set; }
         public Texture2D CurrentAlbedoTexture { get; private set; }
         public Texture2D CurrentDepthPreviewTexture { get; private set; }
+        public Texture2D CurrentTerrainMasksTexture { get; private set; }
+        public TerrainBuildTimings LastBuildTimings { get; private set; }
+        public double LastDecodeMs => LastBuildTimings.DecodeMs;
+        public double LastProcessMs => LastBuildTimings.ProcessMs;
+        public double LastNormalMapMs => LastBuildTimings.NormalMapMs;
+        public double LastTotalBuildMs => LastBuildTimings.TotalBuildMs;
         public bool IsGenerating { get; private set; }
         public string StatusMessage { get; private set; } = "Ready";
         public int ActiveVideoFrameIndex { get; private set; }
         public int AvailableVideoFrames => _videoFrameFolders.Count;
 
         private float[,] _rawHeights;
+        private double _lastDecodeMs;
         private readonly List<string> _videoFrameFolders = new List<string>();
         private CancellationTokenSource _activeCts;
 
@@ -60,6 +70,17 @@ namespace DepthTerrain
         private void OnDisable()
         {
             CancelActiveGeneration();
+        }
+
+        private void OnDestroy()
+        {
+            CancelActiveGeneration();
+            DisposeOwnedTexture(CurrentAlbedoTexture);
+            DisposeOwnedTexture(CurrentDepthPreviewTexture);
+            DisposeOwnedTexture(CurrentTerrainMasksTexture);
+            CurrentAlbedoTexture = null;
+            CurrentDepthPreviewTexture = null;
+            CurrentTerrainMasksTexture = null;
         }
 
         /// <summary>
@@ -119,6 +140,10 @@ namespace DepthTerrain
                 string rawPath = Path.Combine(resolved, metadata.heightmapRawFile);
                 string albedoPath = Path.Combine(resolved, metadata.albedoFile);
                 string previewPath = Path.Combine(resolved, metadata.depthPreviewFile);
+                string masksFileName = string.IsNullOrWhiteSpace(metadata.terrainMasksFile)
+                    ? "terrain_masks.png"
+                    : metadata.terrainMasksFile;
+                string masksPath = Path.Combine(resolved, masksFileName);
 
                 if (!File.Exists(rawPath))
                 {
@@ -128,11 +153,22 @@ namespace DepthTerrain
 
                 byte[] rawBytes = File.ReadAllBytes(rawPath);
                 bool littleEndian = !string.Equals(metadata.rawByteOrder, "big", StringComparison.OrdinalIgnoreCase);
+
+                var decodeSw = Stopwatch.StartNew();
                 _rawHeights = HeightmapProcessor.DecodeRaw16(rawBytes, metadata.rawResolution, littleEndian, metadata.rawFlipY);
+                decodeSw.Stop();
+                _lastDecodeMs = decodeSw.Elapsed.TotalMilliseconds;
+
+                Texture2D prevAlbedo = CurrentAlbedoTexture;
+                Texture2D prevPreview = CurrentDepthPreviewTexture;
+                Texture2D prevMasks = CurrentTerrainMasksTexture;
 
                 CurrentAlbedoTexture = LoadTextureFromFile(albedoPath, "DepthTerrain_Albedo", sRGB: true);
                 CurrentDepthPreviewTexture = File.Exists(previewPath)
                     ? LoadTextureFromFile(previewPath, "DepthTerrain_DepthPreview", sRGB: true)
+                    : null;
+                CurrentTerrainMasksTexture = File.Exists(masksPath)
+                    ? LoadTextureFromFile(masksPath, "DepthTerrain_TerrainMasks", sRGB: false)
                     : null;
                 CurrentMetadata = metadata;
                 activeDatasetFolder = folderOrPresetName;
@@ -165,12 +201,19 @@ namespace DepthTerrain
 
                 RebuildTerrainFromCache();
 
+                // Dispose replaced textures only after TerrainLayer points to the newly loaded ones
+                DisposeOwnedTexture(prevAlbedo);
+                DisposeOwnedTexture(prevPreview);
+                DisposeOwnedTexture(prevMasks);
+
                 if (orbitCamera != null)
                 {
                     orbitCamera.FrameTerrain(buildSettings.terrainSize, buildSettings.terrainHeight);
                 }
 
-                SetStatus($"Loaded '{metadata.sourceLabel}' ({metadata.modelName}, {metadata.inferenceMs:F0} ms on {metadata.device})");
+                SetStatus(
+                    $"Loaded '{metadata.sourceLabel}' ({metadata.modelName}, {metadata.inferenceMs:F0} ms on {metadata.device} | C# build {LastTotalBuildMs:F1} ms)"
+                );
                 return true;
             }
             catch (Exception ex)
@@ -198,18 +241,40 @@ namespace DepthTerrain
             string rawPath = Path.Combine(frameDir, metadata.heightmapRawFile);
             string albedoPath = Path.Combine(frameDir, metadata.albedoFile);
             string previewPath = Path.Combine(frameDir, metadata.depthPreviewFile);
+            string masksFileName = string.IsNullOrWhiteSpace(metadata.terrainMasksFile)
+                ? "terrain_masks.png"
+                : metadata.terrainMasksFile;
+            string masksPath = Path.Combine(frameDir, masksFileName);
 
             byte[] rawBytes = File.ReadAllBytes(rawPath);
             bool littleEndian = !string.Equals(metadata.rawByteOrder, "big", StringComparison.OrdinalIgnoreCase);
+
+            var decodeSw = Stopwatch.StartNew();
             _rawHeights = HeightmapProcessor.DecodeRaw16(rawBytes, metadata.rawResolution, littleEndian, metadata.rawFlipY);
+            decodeSw.Stop();
+            _lastDecodeMs = decodeSw.Elapsed.TotalMilliseconds;
+
+            Texture2D prevAlbedo = CurrentAlbedoTexture;
+            Texture2D prevPreview = CurrentDepthPreviewTexture;
+            Texture2D prevMasks = CurrentTerrainMasksTexture;
+
             CurrentAlbedoTexture = LoadTextureFromFile(albedoPath, "DepthTerrain_VideoAlbedo", sRGB: true);
-            if (File.Exists(previewPath))
-                CurrentDepthPreviewTexture = LoadTextureFromFile(previewPath, "DepthTerrain_VideoPreview", sRGB: true);
+            CurrentDepthPreviewTexture = File.Exists(previewPath)
+                ? LoadTextureFromFile(previewPath, "DepthTerrain_VideoPreview", sRGB: true)
+                : null;
+            CurrentTerrainMasksTexture = File.Exists(masksPath)
+                ? LoadTextureFromFile(masksPath, "DepthTerrain_VideoMasks", sRGB: false)
+                : null;
             CurrentMetadata = metadata;
             ActiveVideoFrameIndex = clamped;
 
             RebuildTerrainFromCache();
-            SetStatus($"Video frame {clamped + 1}/{_videoFrameFolders.Count}: {metadata.sourceLabel}");
+
+            DisposeOwnedTexture(prevAlbedo);
+            DisposeOwnedTexture(prevPreview);
+            DisposeOwnedTexture(prevMasks);
+
+            SetStatus($"Video frame {clamped + 1}/{_videoFrameFolders.Count}: {metadata.sourceLabel} ({LastTotalBuildMs:F1} ms)");
             return true;
         }
 
@@ -225,15 +290,33 @@ namespace DepthTerrain
                 return;
             }
 
+            var totalSw = Stopwatch.StartNew();
+
+            var processSw = Stopwatch.StartNew();
             float[,] processed = HeightmapProcessor.ProcessHeights(_rawHeights, buildSettings);
+            processSw.Stop();
+
             var output = DepthTerrainBuilder.BuildOrUpdateTerrain(
                 targetTerrain,
                 transform,
                 processed,
                 CurrentAlbedoTexture,
                 buildSettings,
-                waterPlane
+                waterPlane,
+                CurrentTerrainMasksTexture
             );
+
+            totalSw.Stop();
+
+            LastBuildTimings = new TerrainBuildTimings
+            {
+                DecodeMs = _lastDecodeMs,
+                ProcessMs = processSw.Elapsed.TotalMilliseconds,
+                NormalMapMs = output.Timings.NormalMapMs,
+                TerrainUploadMs = output.Timings.TerrainUploadMs,
+                TotalBuildMs = totalSw.Elapsed.TotalMilliseconds,
+                Resolution = output.Timings.Resolution
+            };
 
             targetTerrain = output.Terrain;
             waterPlane = output.WaterPlane;
@@ -241,14 +324,15 @@ namespace DepthTerrain
         }
 
         /// <summary>
-        /// Invoke Apple Depth Pro 2 asynchronously via local Python/uv pipeline, then immediately rebuild the Terrain.
+        /// Invoke Apple Depth Pro 2 asynchronously via warm HTTP server (when running) or local Python/uv CLI,
+        /// then immediately rebuild the Terrain.
         /// </summary>
         public async Task<PipelineRunResult> GenerateWithDepthPro2Async(PipelineRunRequest request, Action<string> onLogLine = null)
         {
             CancelActiveGeneration();
             _activeCts = new CancellationTokenSource();
             IsGenerating = true;
-            SetStatus($"Running Apple Depth Pro 2 ({request.model.ToCliFlag()})...");
+            SetStatus($"Running Apple Depth Pro 2 ({request.model.ToCliFlag()}, {request.topDownMode.ToCliFlag()})...");
 
             try
             {
@@ -266,7 +350,8 @@ namespace DepthTerrain
                 if (result.Success)
                 {
                     LoadDataset(result.OutputFolder, applyRecommendedSettings: true);
-                    SetStatus($"Generated '{result.Metadata.sourceLabel}' in {result.ElapsedSeconds:F1}s");
+                    string transport = result.UsedWarmServer ? "warm server" : "CLI";
+                    SetStatus($"Generated '{result.Metadata.sourceLabel}' in {result.ElapsedSeconds:F2}s ({transport})");
                 }
                 else
                 {
@@ -296,6 +381,12 @@ namespace DepthTerrain
         {
             StatusMessage = message;
             OnStatusChanged?.Invoke(message);
+        }
+
+        private static void DisposeOwnedTexture(Texture2D tex)
+        {
+            if (tex != null)
+                DepthTerrainBuilder.DestroyObjectSafe(tex);
         }
 
         private static Texture2D LoadTextureFromFile(string path, string texName, bool sRGB)

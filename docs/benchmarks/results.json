@@ -1,0 +1,1055 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-11-22T00:34:59Z",
+  "hardware": {
+    "chip": "Apple M3",
+    "cpu_cores": 8,
+    "ram_gb": 24.0,
+    "os": "Darwin 26.6.2",
+    "python": "3.12.13",
+    "torch": "2.15.0",
+    "mps_available": true,
+    "git_commit": "6d19438",
+    "git_branch": "feat/showcase-scene-and-presets"
+  },
+  "baseline_file": "baseline.json",
+  "precision_matrix": [
+    {
+      "model": "depthpro2-s",
+      "device": "mps",
+      "precision": "bf16",
+      "resolved_precision": "bfloat16",
+      "resolution": 768,
+      "mode": "raw",
+      "load_ms": 329.62,
+      "inference_ms": 282.73,
+      "wall_ms": 315.35,
+      "runs_ms": [
+        347.77,
+        282.93
+      ],
+      "ms_per_mp": 534.66,
+      "mp_per_sec": 1.87,
+      "fps": 3.171,
+      "rss_max_mb": 600.72,
+      "mps_allocated_mb": 183.29,
+      "mps_driver_mb": 1367.84,
+      "accuracy": {
+        "pearson_r": -0.736,
+        "spearman_rho": -0.6779,
+        "nrmse": 0.1507,
+        "sobel_edge_alignment": 0.3644,
+        "composite_quality": 0.1821
+      }
+    },
+    {
+      "model": "depthpro2-s",
+      "device": "mps",
+      "precision": "fp16",
+      "resolved_precision": "float16",
+      "resolution": 768,
+      "mode": "raw",
+      "load_ms": 180.14,
+      "inference_ms": 229.54,
+      "wall_ms": 230.94,
+      "runs_ms": [
+        232.15,
+        229.74
+      ],
+      "ms_per_mp": 391.54,
+      "mp_per_sec": 2.554,
+      "fps": 4.33,
+      "rss_max_mb": 688.25,
+      "mps_allocated_mb": 183.29,
+      "mps_driver_mb": 1367.84,
+      "accuracy": {
+        "pearson_r": -0.7398,
+        "spearman_rho": -0.6987,
+        "nrmse": 0.1491,
+        "sobel_edge_alignment": 0.409,
+        "composite_quality": 0.189
+      }
+    },
+    {
+      "model": "depthpro2-s",
+      "device": "mps",
+      "precision": "fp32",
+      "resolved_precision": "float32",
+      "resolution": 768,
+      "mode": "raw",
+      "load_ms": 183.79,
+      "inference_ms": 244.79,
+      "wall_ms": 243.06,
+      "runs_ms": [
+        241.12,
+        244.99
+      ],
+      "ms_per_mp": 412.08,
+      "mp_per_sec": 2.427,
+      "fps": 4.114,
+      "rss_max_mb": 691.33,
+      "mps_allocated_mb": 183.29,
+      "mps_driver_mb": 1269.84,
+      "accuracy": {
+        "pearson_r": -0.7397,
+        "spearman_rho": -0.6981,
+        "nrmse": 0.1491,
+        "sobel_edge_alignment": 0.4101,
+        "composite_quality": 0.1891
+      }
+    },
+    {
+      "model": "depthpro2-b",
+      "device": "mps",
+      "precision": "bf16",
+      "resolved_precision": "bfloat16",
+      "resolution": 768,
+      "mode": "raw",
+      "load_ms": 301.32,
+      "inference_ms": 496.54,
+      "wall_ms": 499.16,
+      "runs_ms": [
+        501.59,
+        496.72
+      ],
+      "ms_per_mp": 846.28,
+      "mp_per_sec": 1.182,
+      "fps": 2.003,
+      "rss_max_mb": 692.97,
+      "mps_allocated_mb": 462.91,
+      "mps_driver_mb": 1449.84,
+      "accuracy": {
+        "pearson_r": 0.2813,
+        "spearman_rho": 0.1911,
+        "nrmse": 0.2257,
+        "sobel_edge_alignment": -0.0101,
+        "composite_quality": 0.286
+      }
+    },
+    {
+      "model": "depthpro2-b",
+      "device": "mps",
+      "precision": "fp16",
+      "resolved_precision": "float16",
+      "resolution": 768,
+      "mode": "raw",
+      "load_ms": 303.08,
+      "inference_ms": 476.47,
+      "wall_ms": 482.83,
+      "runs_ms": [
+        489.01,
+        476.65
+      ],
+      "ms_per_mp": 818.6,
+      "mp_per_sec": 1.222,
+      "fps": 2.071,
+      "rss_max_mb": 693.14,
+      "mps_allocated_mb": 462.91,
+      "mps_driver_mb": 1449.84,
+      "accuracy": {
+        "pearson_r": 0.3177,
+        "spearman_rho": 0.2264,
+        "nrmse": 0.223,
+        "sobel_edge_alignment": -0.0345,
+        "composite_quality": 0.3115
+      }
+    },
+    {
+      "model": "depthpro2-b",
+      "device": "mps",
+      "precision": "fp32",
+      "resolved_precision": "float32",
+      "resolution": 768,
+      "mode": "raw",
+      "load_ms": 299.83,
+      "inference_ms": 634.49,
+      "wall_ms": 616.55,
+      "runs_ms": [
+        598.39,
+        634.71
+      ],
+      "ms_per_mp": 1045.32,
+      "mp_per_sec": 0.957,
+      "fps": 1.622,
+      "rss_max_mb": 693.22,
+      "mps_allocated_mb": 462.91,
+      "mps_driver_mb": 1457.84,
+      "accuracy": {
+        "pearson_r": 0.319,
+        "spearman_rho": 0.2271,
+        "nrmse": 0.2229,
+        "sobel_edge_alignment": -0.0343,
+        "composite_quality": 0.3123
+      }
+    },
+    {
+      "model": "depthpro2-s",
+      "device": "cpu",
+      "precision": "fp32",
+      "resolved_precision": "float32",
+      "resolution": 768,
+      "mode": "raw",
+      "load_ms": 583.68,
+      "inference_ms": 996.36,
+      "wall_ms": 996.51,
+      "runs_ms": [
+        996.51
+      ],
+      "ms_per_mp": 1689.5,
+      "mp_per_sec": 0.592,
+      "fps": 1.004,
+      "rss_max_mb": 1664.48,
+      "mps_allocated_mb": 0.0,
+      "mps_driver_mb": 0.0,
+      "accuracy": {
+        "pearson_r": -0.7397,
+        "spearman_rho": -0.6981,
+        "nrmse": 0.1491,
+        "sobel_edge_alignment": 0.4101,
+        "composite_quality": 0.1891
+      }
+    }
+  ],
+  "resolution_scaling": [
+    {
+      "model": "depthpro2-s",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 384,
+      "megapixels": 0.1475,
+      "load_ms": 202.62,
+      "inference_ms": 71.81,
+      "wall_ms": 71.5,
+      "runs_ms": [
+        71.12,
+        71.88
+      ],
+      "ms_per_mp": 484.91,
+      "mp_per_sec": 2.062,
+      "fps": 13.986,
+      "rss_max_mb": 1664.48,
+      "mps_allocated_mb": 183.29,
+      "mps_driver_mb": 1271.84,
+      "accuracy": {
+        "pearson_r": 0.5847,
+        "spearman_rho": 0.546,
+        "nrmse": 0.1883,
+        "sobel_edge_alignment": 0.357,
+        "composite_quality": 0.573
+      }
+    },
+    {
+      "model": "depthpro2-s",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 512,
+      "megapixels": 0.2621,
+      "load_ms": 202.62,
+      "inference_ms": 127.1,
+      "wall_ms": 127.17,
+      "runs_ms": [
+        127.14,
+        127.21
+      ],
+      "ms_per_mp": 485.13,
+      "mp_per_sec": 2.061,
+      "fps": 7.863,
+      "rss_max_mb": 1664.48,
+      "mps_allocated_mb": 183.29,
+      "mps_driver_mb": 1271.98,
+      "accuracy": {
+        "pearson_r": -0.0082,
+        "spearman_rho": -0.1524,
+        "nrmse": 0.2353,
+        "sobel_edge_alignment": 0.1887,
+        "composite_quality": 0.143
+      }
+    },
+    {
+      "model": "depthpro2-s",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 768,
+      "megapixels": 0.5898,
+      "load_ms": 202.62,
+      "inference_ms": 260.12,
+      "wall_ms": 259.08,
+      "runs_ms": [
+        257.84,
+        260.32
+      ],
+      "ms_per_mp": 439.26,
+      "mp_per_sec": 2.277,
+      "fps": 3.86,
+      "rss_max_mb": 1664.48,
+      "mps_allocated_mb": 183.29,
+      "mps_driver_mb": 1272.06,
+      "accuracy": {
+        "pearson_r": -0.736,
+        "spearman_rho": -0.6779,
+        "nrmse": 0.1507,
+        "sobel_edge_alignment": 0.3644,
+        "composite_quality": 0.1821
+      }
+    },
+    {
+      "model": "depthpro2-s",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 1024,
+      "megapixels": 1.0486,
+      "load_ms": 202.62,
+      "inference_ms": 725.44,
+      "wall_ms": 757.87,
+      "runs_ms": [
+        789.72,
+        726.01
+      ],
+      "ms_per_mp": 722.76,
+      "mp_per_sec": 1.384,
+      "fps": 1.319,
+      "rss_max_mb": 1664.48,
+      "mps_allocated_mb": 183.29,
+      "mps_driver_mb": 1272.14,
+      "accuracy": {
+        "pearson_r": -0.5274,
+        "spearman_rho": -0.4203,
+        "nrmse": 0.1997,
+        "sobel_edge_alignment": 0.1852,
+        "composite_quality": 0.1478
+      }
+    },
+    {
+      "model": "depthpro2-b",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 384,
+      "megapixels": 0.1475,
+      "load_ms": 320.71,
+      "inference_ms": 200.57,
+      "wall_ms": 194.22,
+      "runs_ms": [
+        187.79,
+        200.66
+      ],
+      "ms_per_mp": 1317.15,
+      "mp_per_sec": 0.759,
+      "fps": 5.149,
+      "rss_max_mb": 1664.48,
+      "mps_allocated_mb": 462.91,
+      "mps_driver_mb": 1443.84,
+      "accuracy": {
+        "pearson_r": 0.0521,
+        "spearman_rho": -0.0826,
+        "nrmse": 0.235,
+        "sobel_edge_alignment": 0.1908,
+        "composite_quality": 0.1642
+      }
+    },
+    {
+      "model": "depthpro2-b",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 512,
+      "megapixels": 0.2621,
+      "load_ms": 320.71,
+      "inference_ms": 360.72,
+      "wall_ms": 353.36,
+      "runs_ms": [
+        345.84,
+        360.89
+      ],
+      "ms_per_mp": 1347.97,
+      "mp_per_sec": 0.742,
+      "fps": 2.83,
+      "rss_max_mb": 1664.48,
+      "mps_allocated_mb": 462.91,
+      "mps_driver_mb": 1451.98,
+      "accuracy": {
+        "pearson_r": -0.0224,
+        "spearman_rho": -0.1365,
+        "nrmse": 0.2353,
+        "sobel_edge_alignment": 0.0198,
+        "composite_quality": 0.1177
+      }
+    },
+    {
+      "model": "depthpro2-b",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 768,
+      "megapixels": 0.5898,
+      "load_ms": 320.71,
+      "inference_ms": 737.02,
+      "wall_ms": 725.85,
+      "runs_ms": [
+        714.36,
+        737.34
+      ],
+      "ms_per_mp": 1230.62,
+      "mp_per_sec": 0.813,
+      "fps": 1.378,
+      "rss_max_mb": 1664.48,
+      "mps_allocated_mb": 462.91,
+      "mps_driver_mb": 1452.06,
+      "accuracy": {
+        "pearson_r": 0.2813,
+        "spearman_rho": 0.1911,
+        "nrmse": 0.2257,
+        "sobel_edge_alignment": -0.0101,
+        "composite_quality": 0.286
+      }
+    },
+    {
+      "model": "depthpro2-b",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 1024,
+      "megapixels": 1.0486,
+      "load_ms": 320.71,
+      "inference_ms": 1455.55,
+      "wall_ms": 1455.34,
+      "runs_ms": [
+        1454.66,
+        1456.02
+      ],
+      "ms_per_mp": 1387.92,
+      "mp_per_sec": 0.721,
+      "fps": 0.687,
+      "rss_max_mb": 1664.48,
+      "mps_allocated_mb": 462.91,
+      "mps_driver_mb": 2476.14,
+      "accuracy": {
+        "pearson_r": 0.4563,
+        "spearman_rho": 0.406,
+        "nrmse": 0.2091,
+        "sobel_edge_alignment": 0.0796,
+        "composite_quality": 0.4349
+      }
+    }
+  ],
+  "topdown_modes": [
+    {
+      "model": "depthpro2-s",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 768,
+      "mode": "raw",
+      "guided_filter": false,
+      "load_ms": 276.18,
+      "inference_ms": 228.87,
+      "guided_filter_ms": 0.0,
+      "wall_ms": 227.92,
+      "runs_ms": [
+        226.79,
+        229.06
+      ],
+      "ms_per_mp": 386.42,
+      "fps": 4.387,
+      "baseline_wall_ms": 246.86,
+      "speedup_vs_baseline": 1.08,
+      "quality_per_sec": 0.799,
+      "rss_max_mb": 597.61,
+      "mps_allocated_mb": 183.29,
+      "mps_driver_mb": 1367.86,
+      "accuracy": {
+        "pearson_r": -0.736,
+        "spearman_rho": -0.6779,
+        "nrmse": 0.1507,
+        "sobel_edge_alignment": 0.3644,
+        "composite_quality": 0.1821
+      }
+    },
+    {
+      "model": "depthpro2-s",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 768,
+      "mode": "raw",
+      "guided_filter": true,
+      "load_ms": 276.18,
+      "inference_ms": 228.87,
+      "guided_filter_ms": 27.61,
+      "wall_ms": 255.54,
+      "runs_ms": [
+        226.79,
+        229.06
+      ],
+      "ms_per_mp": 433.24,
+      "fps": 3.913,
+      "baseline_wall_ms": 246.86,
+      "speedup_vs_baseline": 0.97,
+      "quality_per_sec": 0.7439,
+      "rss_max_mb": 597.61,
+      "mps_allocated_mb": 183.29,
+      "mps_driver_mb": 1367.86,
+      "accuracy": {
+        "pearson_r": -0.7383,
+        "spearman_rho": -0.6767,
+        "nrmse": 0.1503,
+        "sobel_edge_alignment": 0.4174,
+        "composite_quality": 0.1901
+      }
+    },
+    {
+      "model": "depthpro2-s",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 768,
+      "mode": "tta4",
+      "guided_filter": false,
+      "load_ms": 276.18,
+      "inference_ms": 766.05,
+      "guided_filter_ms": 0.0,
+      "wall_ms": 762.61,
+      "runs_ms": [
+        758.72,
+        766.49
+      ],
+      "ms_per_mp": 1292.94,
+      "fps": 1.311,
+      "baseline_wall_ms": 1002.91,
+      "speedup_vs_baseline": 1.32,
+      "quality_per_sec": 0.1799,
+      "rss_max_mb": 687.44,
+      "mps_allocated_mb": 183.29,
+      "mps_driver_mb": 1367.84,
+      "accuracy": {
+        "pearson_r": -0.1725,
+        "spearman_rho": -0.0872,
+        "nrmse": 0.2317,
+        "sobel_edge_alignment": 0.1461,
+        "composite_quality": 0.1372
+      }
+    },
+    {
+      "model": "depthpro2-s",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 768,
+      "mode": "tta4",
+      "guided_filter": true,
+      "load_ms": 276.18,
+      "inference_ms": 766.05,
+      "guided_filter_ms": 27.41,
+      "wall_ms": 790.02,
+      "runs_ms": [
+        758.72,
+        766.49
+      ],
+      "ms_per_mp": 1339.41,
+      "fps": 1.266,
+      "baseline_wall_ms": 1002.91,
+      "speedup_vs_baseline": 1.27,
+      "quality_per_sec": 0.1792,
+      "rss_max_mb": 687.44,
+      "mps_allocated_mb": 183.29,
+      "mps_driver_mb": 1367.84,
+      "accuracy": {
+        "pearson_r": -0.1739,
+        "spearman_rho": -0.0862,
+        "nrmse": 0.2316,
+        "sobel_edge_alignment": 0.1755,
+        "composite_quality": 0.1416
+      }
+    },
+    {
+      "model": "depthpro2-s",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 768,
+      "mode": "fast_multiscale",
+      "guided_filter": false,
+      "load_ms": 276.18,
+      "inference_ms": 647.14,
+      "guided_filter_ms": 0.0,
+      "wall_ms": 662.73,
+      "runs_ms": [
+        677.68,
+        647.79
+      ],
+      "ms_per_mp": 1123.61,
+      "fps": 1.509,
+      "baseline_wall_ms": null,
+      "speedup_vs_baseline": null,
+      "quality_per_sec": 0.1764,
+      "rss_max_mb": 689.23,
+      "mps_allocated_mb": 183.29,
+      "mps_driver_mb": 1367.97,
+      "accuracy": {
+        "pearson_r": -0.3424,
+        "spearman_rho": -0.2065,
+        "nrmse": 0.221,
+        "sobel_edge_alignment": -0.1174,
+        "composite_quality": 0.1169
+      }
+    },
+    {
+      "model": "depthpro2-s",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 768,
+      "mode": "fast_multiscale",
+      "guided_filter": true,
+      "load_ms": 276.18,
+      "inference_ms": 647.14,
+      "guided_filter_ms": 26.93,
+      "wall_ms": 689.66,
+      "runs_ms": [
+        677.68,
+        647.79
+      ],
+      "ms_per_mp": 1169.27,
+      "fps": 1.45,
+      "baseline_wall_ms": null,
+      "speedup_vs_baseline": null,
+      "quality_per_sec": 0.1695,
+      "rss_max_mb": 689.23,
+      "mps_allocated_mb": 183.29,
+      "mps_driver_mb": 1367.97,
+      "accuracy": {
+        "pearson_r": -0.3471,
+        "spearman_rho": -0.2091,
+        "nrmse": 0.2206,
+        "sobel_edge_alignment": -0.1033,
+        "composite_quality": 0.1169
+      }
+    },
+    {
+      "model": "depthpro2-s",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 768,
+      "mode": "multiscale_tta",
+      "guided_filter": false,
+      "load_ms": 276.18,
+      "inference_ms": 1498.46,
+      "guided_filter_ms": 0.0,
+      "wall_ms": 1499.07,
+      "runs_ms": [
+        1499.07
+      ],
+      "ms_per_mp": 2541.55,
+      "fps": 0.667,
+      "baseline_wall_ms": 3038.12,
+      "speedup_vs_baseline": 2.03,
+      "quality_per_sec": 0.0893,
+      "rss_max_mb": 723.64,
+      "mps_allocated_mb": 183.29,
+      "mps_driver_mb": 1368.05,
+      "accuracy": {
+        "pearson_r": -0.3797,
+        "spearman_rho": -0.2832,
+        "nrmse": 0.2176,
+        "sobel_edge_alignment": 0.1101,
+        "composite_quality": 0.1339
+      }
+    },
+    {
+      "model": "depthpro2-s",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 768,
+      "mode": "multiscale_tta",
+      "guided_filter": true,
+      "load_ms": 276.18,
+      "inference_ms": 1498.46,
+      "guided_filter_ms": 26.57,
+      "wall_ms": 1525.64,
+      "runs_ms": [
+        1499.07
+      ],
+      "ms_per_mp": 2586.61,
+      "fps": 0.655,
+      "baseline_wall_ms": 3038.12,
+      "speedup_vs_baseline": 1.99,
+      "quality_per_sec": 0.0882,
+      "rss_max_mb": 723.64,
+      "mps_allocated_mb": 183.29,
+      "mps_driver_mb": 1368.05,
+      "accuracy": {
+        "pearson_r": -0.384,
+        "spearman_rho": -0.285,
+        "nrmse": 0.2172,
+        "sobel_edge_alignment": 0.1147,
+        "composite_quality": 0.1346
+      }
+    },
+    {
+      "model": "depthpro2-b",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 768,
+      "mode": "raw",
+      "guided_filter": false,
+      "load_ms": 304.98,
+      "inference_ms": 490.18,
+      "guided_filter_ms": 0.0,
+      "wall_ms": 498.71,
+      "runs_ms": [
+        506.78,
+        490.64
+      ],
+      "ms_per_mp": 845.52,
+      "fps": 2.005,
+      "baseline_wall_ms": 524.81,
+      "speedup_vs_baseline": 1.05,
+      "quality_per_sec": 0.5735,
+      "rss_max_mb": 742.31,
+      "mps_allocated_mb": 462.91,
+      "mps_driver_mb": 1443.84,
+      "accuracy": {
+        "pearson_r": 0.2813,
+        "spearman_rho": 0.1911,
+        "nrmse": 0.2257,
+        "sobel_edge_alignment": -0.0101,
+        "composite_quality": 0.286
+      }
+    },
+    {
+      "model": "depthpro2-b",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 768,
+      "mode": "raw",
+      "guided_filter": true,
+      "load_ms": 304.98,
+      "inference_ms": 490.18,
+      "guided_filter_ms": 26.17,
+      "wall_ms": 524.88,
+      "runs_ms": [
+        506.78,
+        490.64
+      ],
+      "ms_per_mp": 889.89,
+      "fps": 1.905,
+      "baseline_wall_ms": 524.81,
+      "speedup_vs_baseline": 1.0,
+      "quality_per_sec": 0.5548,
+      "rss_max_mb": 742.31,
+      "mps_allocated_mb": 462.91,
+      "mps_driver_mb": 1443.84,
+      "accuracy": {
+        "pearson_r": 0.2819,
+        "spearman_rho": 0.1923,
+        "nrmse": 0.2257,
+        "sobel_edge_alignment": 0.0304,
+        "composite_quality": 0.2912
+      }
+    },
+    {
+      "model": "depthpro2-b",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 768,
+      "mode": "tta4",
+      "guided_filter": false,
+      "load_ms": 304.98,
+      "inference_ms": 2292.24,
+      "guided_filter_ms": 0.0,
+      "wall_ms": 2089.82,
+      "runs_ms": [
+        1886.97,
+        2292.67
+      ],
+      "ms_per_mp": 3543.12,
+      "fps": 0.479,
+      "baseline_wall_ms": 2126.23,
+      "speedup_vs_baseline": 1.02,
+      "quality_per_sec": 0.386,
+      "rss_max_mb": 742.47,
+      "mps_allocated_mb": 462.91,
+      "mps_driver_mb": 1443.84,
+      "accuracy": {
+        "pearson_r": 0.8883,
+        "spearman_rho": 0.8782,
+        "nrmse": 0.1035,
+        "sobel_edge_alignment": 0.3557,
+        "composite_quality": 0.8066
+      }
+    },
+    {
+      "model": "depthpro2-b",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 768,
+      "mode": "tta4",
+      "guided_filter": true,
+      "load_ms": 304.98,
+      "inference_ms": 2292.24,
+      "guided_filter_ms": 30.25,
+      "wall_ms": 2120.07,
+      "runs_ms": [
+        1886.97,
+        2292.67
+      ],
+      "ms_per_mp": 3594.41,
+      "fps": 0.472,
+      "baseline_wall_ms": 2126.23,
+      "speedup_vs_baseline": 1.0,
+      "quality_per_sec": 0.3835,
+      "rss_max_mb": 742.47,
+      "mps_allocated_mb": 462.91,
+      "mps_driver_mb": 1443.84,
+      "accuracy": {
+        "pearson_r": 0.8908,
+        "spearman_rho": 0.8806,
+        "nrmse": 0.1028,
+        "sobel_edge_alignment": 0.3862,
+        "composite_quality": 0.813
+      }
+    },
+    {
+      "model": "depthpro2-b",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 768,
+      "mode": "fast_multiscale",
+      "guided_filter": false,
+      "load_ms": 304.98,
+      "inference_ms": 2056.18,
+      "guided_filter_ms": 0.0,
+      "wall_ms": 2295.13,
+      "runs_ms": [
+        2533.46,
+        2056.8
+      ],
+      "ms_per_mp": 3891.21,
+      "fps": 0.436,
+      "baseline_wall_ms": null,
+      "speedup_vs_baseline": null,
+      "quality_per_sec": 0.2787,
+      "rss_max_mb": 742.52,
+      "mps_allocated_mb": 462.91,
+      "mps_driver_mb": 1443.97,
+      "accuracy": {
+        "pearson_r": 0.765,
+        "spearman_rho": 0.6155,
+        "nrmse": 0.1438,
+        "sobel_edge_alignment": 0.1377,
+        "composite_quality": 0.6397
+      }
+    },
+    {
+      "model": "depthpro2-b",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 768,
+      "mode": "fast_multiscale",
+      "guided_filter": true,
+      "load_ms": 304.98,
+      "inference_ms": 2056.18,
+      "guided_filter_ms": 29.06,
+      "wall_ms": 2324.19,
+      "runs_ms": [
+        2533.46,
+        2056.8
+      ],
+      "ms_per_mp": 3940.48,
+      "fps": 0.43,
+      "baseline_wall_ms": null,
+      "speedup_vs_baseline": null,
+      "quality_per_sec": 0.2771,
+      "rss_max_mb": 742.52,
+      "mps_allocated_mb": 462.91,
+      "mps_driver_mb": 1443.97,
+      "accuracy": {
+        "pearson_r": 0.767,
+        "spearman_rho": 0.6202,
+        "nrmse": 0.1434,
+        "sobel_edge_alignment": 0.151,
+        "composite_quality": 0.644
+      }
+    },
+    {
+      "model": "depthpro2-b",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 768,
+      "mode": "multiscale_tta",
+      "guided_filter": false,
+      "load_ms": 304.98,
+      "inference_ms": 5464.49,
+      "guided_filter_ms": 0.0,
+      "wall_ms": 5465.28,
+      "runs_ms": [
+        5465.28
+      ],
+      "ms_per_mp": 9265.95,
+      "fps": 0.183,
+      "baseline_wall_ms": 4923.53,
+      "speedup_vs_baseline": 0.9,
+      "quality_per_sec": 0.1151,
+      "rss_max_mb": 742.56,
+      "mps_allocated_mb": 462.91,
+      "mps_driver_mb": 1444.05,
+      "accuracy": {
+        "pearson_r": 0.7525,
+        "spearman_rho": 0.6455,
+        "nrmse": 0.151,
+        "sobel_edge_alignment": 0.0481,
+        "composite_quality": 0.6292
+      }
+    },
+    {
+      "model": "depthpro2-b",
+      "device": "mps",
+      "precision": "bf16",
+      "resolution": 768,
+      "mode": "multiscale_tta",
+      "guided_filter": true,
+      "load_ms": 304.98,
+      "inference_ms": 5464.49,
+      "guided_filter_ms": 42.52,
+      "wall_ms": 5507.8,
+      "runs_ms": [
+        5465.28
+      ],
+      "ms_per_mp": 9338.04,
+      "fps": 0.182,
+      "baseline_wall_ms": 4923.53,
+      "speedup_vs_baseline": 0.89,
+      "quality_per_sec": 0.1152,
+      "rss_max_mb": 742.56,
+      "mps_allocated_mb": 462.91,
+      "mps_driver_mb": 1444.05,
+      "accuracy": {
+        "pearson_r": 0.7583,
+        "spearman_rho": 0.6471,
+        "nrmse": 0.1497,
+        "sobel_edge_alignment": 0.062,
+        "composite_quality": 0.6343
+      }
+    }
+  ],
+  "cold_vs_warm": {
+    "resolution": 768,
+    "topdown_mode": "fast_multiscale",
+    "warm_requests": 3,
+    "comparisons": [
+      {
+        "model": "depthpro2-s",
+        "device": "mps",
+        "resolution": 768,
+        "topdown_mode": "fast_multiscale",
+        "cold_cli_wall_ms": 4871.02,
+        "cold_cli_inference_ms": 1106.7,
+        "cold_overhead_ms": 3764.32,
+        "server_startup_ms": 2981.07,
+        "warm_http_runs_ms": [
+          1379.15,
+          1387.02,
+          1277.84
+        ],
+        "warm_http_median_ms": 1379.15,
+        "warm_http_inference_median_ms": 1077.35,
+        "warm_speedup_vs_cold": 3.53,
+        "latency_saved_ms": 3491.87,
+        "server_error": null
+      },
+      {
+        "model": "depthpro2-b",
+        "device": "mps",
+        "resolution": 768,
+        "topdown_mode": "fast_multiscale",
+        "cold_cli_wall_ms": 6089.78,
+        "cold_cli_inference_ms": 2557.09,
+        "cold_overhead_ms": 3532.69,
+        "server_startup_ms": 2990.87,
+        "warm_http_runs_ms": [
+          2650.84,
+          2604.29,
+          2680.47
+        ],
+        "warm_http_median_ms": 2650.84,
+        "warm_http_inference_median_ms": 2436.54,
+        "warm_speedup_vs_cold": 2.3,
+        "latency_saved_ms": 3438.94,
+        "server_error": null
+      }
+    ]
+  },
+  "video_stability": {
+    "model": "depthpro2-s",
+    "num_frames": 12,
+    "frame_size": 512,
+    "pan_dx_px": 16,
+    "strategies": [
+      {
+        "strategy": "infer_video_buffered",
+        "model": "depthpro2-s",
+        "device": "mps",
+        "num_frames": 12,
+        "frame_size": 512,
+        "pan_dx_px": 16,
+        "total_wall_ms": 3069.7,
+        "per_frame_ms": 230.46,
+        "fps": 4.34,
+        "stability": {
+          "num_frames": 12,
+          "overlap_mad": 0.05423,
+          "overlap_rmse": 0.07427,
+          "overlap_pearson_r": 0.9545,
+          "frame_mean_std": 0.01879
+        },
+        "mid_frame_accuracy": {
+          "pearson_r": -0.0145,
+          "spearman_rho": -0.0727,
+          "nrmse": 0.2508,
+          "sobel_edge_alignment": -0.0472,
+          "composite_quality": 0.1124
+        }
+      },
+      {
+        "strategy": "infer_video_unbuffered",
+        "model": "depthpro2-s",
+        "device": "mps",
+        "num_frames": 12,
+        "frame_size": 512,
+        "pan_dx_px": 16,
+        "total_wall_ms": 2555.12,
+        "per_frame_ms": 199.78,
+        "fps": 5.01,
+        "stability": {
+          "num_frames": 12,
+          "overlap_mad": 0.05113,
+          "overlap_rmse": 0.0675,
+          "overlap_pearson_r": 0.9651,
+          "frame_mean_std": 0.03668
+        },
+        "mid_frame_accuracy": {
+          "pearson_r": -0.0113,
+          "spearman_rho": -0.0881,
+          "nrmse": 0.2508,
+          "sobel_edge_alignment": 0.0146,
+          "composite_quality": 0.1146
+        }
+      },
+      {
+        "strategy": "single_image_raw",
+        "model": "depthpro2-s",
+        "device": "mps",
+        "num_frames": 12,
+        "frame_size": 512,
+        "pan_dx_px": 16,
+        "total_wall_ms": 2426.78,
+        "per_frame_ms": 202.23,
+        "fps": 4.94,
+        "stability": {
+          "num_frames": 12,
+          "overlap_mad": 0.08183,
+          "overlap_rmse": 0.10456,
+          "overlap_pearson_r": 0.9081,
+          "frame_mean_std": 0.04331
+        },
+        "mid_frame_accuracy": {
+          "pearson_r": -0.007,
+          "spearman_rho": -0.1352,
+          "nrmse": 0.2508,
+          "sobel_edge_alignment": 0.0088,
+          "composite_quality": 0.1137
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,144 @@
+{
+  "benchmark_type": "baseline_before_optimization",
+  "captured_at": "2026-11-22T00:19:55Z",
+  "git_commit": "6d19438",
+  "depth_runner_sha256_prefix": "5e107853aa369213",
+  "hardware": {
+    "chip": "Apple M3",
+    "cpu_cores": 8,
+    "ram_gb": 24.0,
+    "os": "Darwin 26.6.2",
+    "python": "3.12.13",
+    "torch": "2.15.0",
+    "mps_available": true
+  },
+  "resolution": 768,
+  "runs": [
+    {
+      "model": "depthpro2-s",
+      "device": "mps",
+      "precision": "bfloat16",
+      "resolution": 768,
+      "mode": "raw",
+      "load_ms": 993.8,
+      "inference_ms": 246.7,
+      "wall_ms": 246.86,
+      "ms_per_mp": 418.53,
+      "fps": 4.051,
+      "rss_max_mb": 623.25,
+      "mps_allocated_mb": 183.29,
+      "mps_driver_mb": 1375.84,
+      "accuracy": {
+        "pearson_r": -0.169,
+        "spearman_rho": -0.1756,
+        "nrmse": 0.1797,
+        "sobel_edge_alignment": -0.0253
+      }
+    },
+    {
+      "model": "depthpro2-s",
+      "device": "mps",
+      "precision": "bfloat16",
+      "resolution": 768,
+      "mode": "tta4",
+      "load_ms": 993.8,
+      "inference_ms": 1002.26,
+      "wall_ms": 1002.91,
+      "ms_per_mp": 1700.36,
+      "fps": 0.997,
+      "rss_max_mb": 625.23,
+      "mps_allocated_mb": 183.29,
+      "mps_driver_mb": 1375.84,
+      "accuracy": {
+        "pearson_r": 0.097,
+        "spearman_rho": 0.0707,
+        "nrmse": 0.1814,
+        "sobel_edge_alignment": -0.0583
+      }
+    },
+    {
+      "model": "depthpro2-s",
+      "device": "mps",
+      "precision": "bfloat16",
+      "resolution": 768,
+      "mode": "multiscale_tta",
+      "load_ms": 993.8,
+      "inference_ms": 3037.48,
+      "wall_ms": 3038.12,
+      "ms_per_mp": 5150.89,
+      "fps": 0.329,
+      "rss_max_mb": 651.97,
+      "mps_allocated_mb": 183.29,
+      "mps_driver_mb": 1383.94,
+      "accuracy": {
+        "pearson_r": 0.2803,
+        "spearman_rho": 0.2119,
+        "nrmse": 0.175,
+        "sobel_edge_alignment": 0.0088
+      }
+    },
+    {
+      "model": "depthpro2-b",
+      "device": "mps",
+      "precision": "bfloat16",
+      "resolution": 768,
+      "mode": "raw",
+      "load_ms": 507.82,
+      "inference_ms": 524.6,
+      "wall_ms": 524.81,
+      "ms_per_mp": 889.77,
+      "fps": 1.905,
+      "rss_max_mb": 652.17,
+      "mps_allocated_mb": 462.91,
+      "mps_driver_mb": 1459.84,
+      "accuracy": {
+        "pearson_r": -0.0698,
+        "spearman_rho": -0.0544,
+        "nrmse": 0.1818,
+        "sobel_edge_alignment": -0.0116
+      }
+    },
+    {
+      "model": "depthpro2-b",
+      "device": "mps",
+      "precision": "bfloat16",
+      "resolution": 768,
+      "mode": "tta4",
+      "load_ms": 507.82,
+      "inference_ms": 2125.78,
+      "wall_ms": 2126.23,
+      "ms_per_mp": 3604.85,
+      "fps": 0.47,
+      "rss_max_mb": 652.19,
+      "mps_allocated_mb": 462.91,
+      "mps_driver_mb": 1459.84,
+      "accuracy": {
+        "pearson_r": 0.094,
+        "spearman_rho": 0.0514,
+        "nrmse": 0.1815,
+        "sobel_edge_alignment": -0.1122
+      }
+    },
+    {
+      "model": "depthpro2-b",
+      "device": "mps",
+      "precision": "bfloat16",
+      "resolution": 768,
+      "mode": "multiscale_tta",
+      "load_ms": 507.82,
+      "inference_ms": 4922.77,
+      "wall_ms": 4923.53,
+      "ms_per_mp": 8347.46,
+      "fps": 0.203,
+      "rss_max_mb": 653.02,
+      "mps_allocated_mb": 462.91,
+      "mps_driver_mb": 1467.94,
+      "accuracy": {
+        "pearson_r": 0.0397,
+        "spearman_rho": 0.0034,
+        "nrmse": 0.1821,
+        "sobel_edge_alignment": -0.1162
+      }
+    }
+  ]
+}

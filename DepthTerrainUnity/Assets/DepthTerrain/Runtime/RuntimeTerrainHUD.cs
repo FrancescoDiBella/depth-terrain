@@ -23,6 +23,12 @@ namespace DepthTerrain
         private int _biomeIdx;
         private int _seed = 108;
         private int _modelIdx = 1; // 0=S, 1=B, 2=L, 3=H+
+        private int _topDownModeIdx; // 0=FastMultiscale, 1=MultiscaleTTA, 2=TTA4, 3=Raw
+        private bool _useGuidedFilter;
+        private bool _exportPly;
+        private bool _preferWarmServer = true;
+        private WarmServerHealth _warmServerHealth = new WarmServerHealth();
+        private bool _checkingWarmServer;
         private float _sunElevation = 34f;
         private float _sunAzimuth = -42f;
 
@@ -38,11 +44,20 @@ namespace DepthTerrain
         private bool _stylesBuilt;
 
         private static readonly string[] ModelLabels = { "S (97MB)", "B (386MB)", "L (1.3GB)", "H+ (3.5GB)" };
+        private static readonly string[] TopDownModeLabels = { "FastMS", "FullMS", "TTA4", "Raw" };
+        private static readonly TopDownAdaptationMode[] TopDownModes =
+        {
+            TopDownAdaptationMode.FastMultiscale,
+            TopDownAdaptationMode.MultiscaleTTA,
+            TopDownAdaptationMode.TTA4_Fast,
+            TopDownAdaptationMode.RawSinglePass
+        };
 
         private void Awake()
         {
             _controller = GetComponent<DepthTerrainController>();
             _samples = DepthTerrainController.DiscoverBundledSamples();
+            RefreshWarmServerStatusAsync();
         }
 
         private void OnDestroy()
@@ -214,6 +229,7 @@ namespace DepthTerrain
             _zoom = Mathf.RoundToInt(GUILayout.HorizontalSlider(_zoom, 10, 17));
 
             DrawModelSelector();
+            DrawInferenceOptions();
 
             GUI.enabled = !_controller.IsGenerating;
             if (GUILayout.Button(_controller.IsGenerating ? "Running Depth Pro 2..." : "Fetch Map & Generate Terrain", _activeButtonStyle, GUILayout.Height(30)))
@@ -227,7 +243,10 @@ namespace DepthTerrain
                     tileGrid = 3,
                     mapProvider = DepthPipelineBridge.MapProviders[_providerIdx],
                     model = (DepthPro2ModelVariant)_modelIdx,
-                    topDownMode = TopDownAdaptationMode.MultiscaleTTA
+                    topDownMode = TopDownModes[_topDownModeIdx],
+                    useGuidedFilter = _useGuidedFilter,
+                    exportPointCloudPly = _exportPly,
+                    preferWarmServer = _preferWarmServer
                 };
                 _ = _controller.GenerateWithDepthPro2Async(req);
             }
@@ -252,6 +271,7 @@ namespace DepthTerrain
             GUILayout.EndHorizontal();
 
             DrawModelSelector();
+            DrawInferenceOptions();
 
             GUI.enabled = !_controller.IsGenerating;
             if (GUILayout.Button(_controller.IsGenerating ? "Running Depth Pro 2..." : "Synthesize & Infer with Depth Pro 2", _activeButtonStyle, GUILayout.Height(30)))
@@ -263,7 +283,10 @@ namespace DepthTerrain
                     fictionalSeed = _seed,
                     fictionalImageSize = 768,
                     model = (DepthPro2ModelVariant)_modelIdx,
-                    topDownMode = TopDownAdaptationMode.MultiscaleTTA
+                    topDownMode = TopDownModes[_topDownModeIdx],
+                    useGuidedFilter = _useGuidedFilter,
+                    exportPointCloudPly = _exportPly,
+                    preferWarmServer = _preferWarmServer
                 };
                 _ = _controller.GenerateWithDepthPro2Async(req);
             }
@@ -281,6 +304,84 @@ namespace DepthTerrain
             }
             GUILayout.EndHorizontal();
             GUILayout.Space(4);
+        }
+
+        private void DrawInferenceOptions()
+        {
+            GUILayout.Label("Top-Down Mode:", _labelStyle);
+            GUILayout.BeginHorizontal();
+            for (int i = 0; i < TopDownModeLabels.Length; i++)
+            {
+                if (GUILayout.Button(TopDownModeLabels[i], _topDownModeIdx == i ? _activeButtonStyle : _buttonStyle))
+                    _topDownModeIdx = i;
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            _useGuidedFilter = GUILayout.Toggle(_useGuidedFilter, " Guided Filter");
+            _exportPly = GUILayout.Toggle(_exportPly, " Export .PLY");
+            GUILayout.EndHorizontal();
+
+            DrawWarmServerControls();
+            GUILayout.Space(4);
+        }
+
+        private void DrawWarmServerControls()
+        {
+            bool managedRunning = DepthPipelineBridge.IsManagedWarmServerRunning;
+            bool healthy = _warmServerHealth != null && _warmServerHealth.IsHealthy;
+            string status = healthy
+                ? $"Warm Server: ONLINE ({_warmServerHealth.model}, {_warmServerHealth.device})"
+                : managedRunning
+                    ? "Warm Server: STARTING..."
+                    : "Warm Server: OFFLINE (CLI fallback)";
+
+            GUILayout.Label(status, _labelStyle);
+            GUILayout.BeginHorizontal();
+            _preferWarmServer = GUILayout.Toggle(_preferWarmServer, " Use Server");
+
+            if (managedRunning)
+            {
+                if (GUILayout.Button("Stop", _buttonStyle, GUILayout.Width(54)))
+                {
+                    DepthPipelineBridge.StopWarmServerProcess();
+                    _warmServerHealth = new WarmServerHealth { IsHealthy = false };
+                }
+            }
+            else if (!healthy)
+            {
+                if (GUILayout.Button("Start", _buttonStyle, GUILayout.Width(54)))
+                {
+                    DepthPipelineBridge.StartWarmServerProcess(
+                        model: (DepthPro2ModelVariant)_modelIdx,
+                        pipelineDirectoryOverride: _controller.customPipelineDirectory,
+                        uvExecutableOverride: _controller.customUvExecutable
+                    );
+                    RefreshWarmServerStatusAsync();
+                }
+            }
+
+            GUI.enabled = !_checkingWarmServer;
+            if (GUILayout.Button(_checkingWarmServer ? "..." : "Ping", _buttonStyle, GUILayout.Width(48)))
+            {
+                RefreshWarmServerStatusAsync();
+            }
+            GUI.enabled = true;
+            GUILayout.EndHorizontal();
+        }
+
+        private async void RefreshWarmServerStatusAsync()
+        {
+            if (_checkingWarmServer) return;
+            _checkingWarmServer = true;
+            try
+            {
+                _warmServerHealth = await DepthPipelineBridge.CheckWarmServerHealthAsync(timeoutMs: 300);
+            }
+            finally
+            {
+                _checkingWarmServer = false;
+            }
         }
 
         private void DrawTerrainTuningControls()
@@ -305,6 +406,9 @@ namespace DepthTerrain
             float newNormal = DrawSlider("Normal Relief", s.normalMapStrength, 0f, 3.0f, "F1", "", ref changed);
             s.normalMapStrength = newNormal;
 
+            float newCliff = DrawSlider("Cliff Detail", s.cliffDetailStrength, 0f, 1.5f, "F2", "", ref changed);
+            s.cliffDetailStrength = newCliff;
+
             GUILayout.BeginHorizontal();
             bool inv = GUILayout.Toggle(s.invertHeight, " Invert Depth");
             if (inv != s.invertHeight) { s.invertHeight = inv; changed = true; }
@@ -313,8 +417,13 @@ namespace DepthTerrain
             if (water != s.showWaterPlane) { s.showWaterPlane = water; changed = true; }
             GUILayout.EndHorizontal();
 
-            bool falloff = GUILayout.Toggle(s.edgeFalloff, " Island Edge Falloff");
+            GUILayout.BeginHorizontal();
+            bool falloff = GUILayout.Toggle(s.edgeFalloff, " Edge Falloff");
             if (falloff != s.edgeFalloff) { s.edgeFalloff = falloff; changed = true; }
+
+            bool masks = GUILayout.Toggle(s.useTerrainMasks, " Topo Masks");
+            if (masks != s.useTerrainMasks) { s.useTerrainMasks = masks; changed = true; }
+            GUILayout.EndHorizontal();
 
             if (changed)
             {
@@ -347,15 +456,24 @@ namespace DepthTerrain
 
         private void DrawTelemetrySection()
         {
-            GUILayout.Label("Depth Pro 2 Telemetry", _sectionStyle);
+            GUILayout.Label("Depth Pro 2 & C# Build Telemetry", _sectionStyle);
             GUILayout.Label(_controller.StatusMessage, _labelStyle);
             var m = _controller.CurrentMetadata;
+            var t = _controller.LastBuildTimings;
             if (m != null)
             {
                 GUILayout.Label(
                     $"Model: {m.modelName} ({m.device} / {m.precision})\n" +
                     $"Inference: {m.inferenceMs:F0} ms | Focal: {m.focalLengthPx:F0} px\n" +
                     $"Footprint: {m.groundWidthMeters:F0}m x {m.groundHeightMeters:F0}m | Grid: {m.rawResolution}x{m.rawResolution}",
+                    _labelStyle
+                );
+            }
+            if (t.Resolution > 0)
+            {
+                GUILayout.Label(
+                    $"C# Rebuild ({t.Resolution}x{t.Resolution}): {t.TotalBuildMs:F2} ms\n" +
+                    $"Proc: {t.ProcessMs:F2} ms | Norm: {t.NormalMapMs:F2} ms | Upload: {t.TerrainUploadMs:F2} ms | Dec: {t.DecodeMs:F2} ms",
                     _labelStyle
                 );
             }

@@ -37,8 +37,12 @@ namespace DepthTerrain.Editor
             if (ctrl.CurrentMetadata != null)
             {
                 var m = ctrl.CurrentMetadata;
+                var t = ctrl.LastBuildTimings;
                 EditorGUILayout.HelpBox(
-                    $"Source: {m.sourceLabel}\nModel: {m.modelName} ({m.device}, {m.precision})\nInference: {m.inferenceMs:F1} ms | Resolution: {m.rawResolution}x{m.rawResolution}",
+                    $"Source: {m.sourceLabel}\n" +
+                    $"Model: {m.modelName} ({m.device}, {m.precision})\n" +
+                    $"Inference: {m.inferenceMs:F1} ms | Resolution: {m.rawResolution}x{m.rawResolution}\n" +
+                    $"C# Build: {t.TotalBuildMs:F2} ms (Proc {t.ProcessMs:F2} ms | Norm {t.NormalMapMs:F2} ms | Dec {t.DecodeMs:F2} ms)",
                     MessageType.None
                 );
             }

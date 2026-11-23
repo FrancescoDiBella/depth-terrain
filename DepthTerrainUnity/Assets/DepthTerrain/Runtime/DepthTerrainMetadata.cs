@@ -26,6 +26,11 @@ namespace DepthTerrain
         public string heightmapRawFile = "heightmap.raw";
         public string heightmapPng16File = "heightmap_16bit.png";
         public string depthPreviewFile = "depth_preview.png";
+        public string terrainMasksFile = "terrain_masks.png";
+        public string pointCloudFile = "";
+        public string topDownMode = "";
+        public bool guidedFilter;
+        public int keyframeIndex;
         public float groundWidthMeters = 500f;
         public float groundHeightMeters = 500f;
         public float recommendedTerrainSize = 500f;
@@ -101,9 +106,35 @@ namespace DepthTerrain
         [Range(0.02f, 0.35f)]
         public float edgeFalloffMargin = 0.08f;
 
+        [Tooltip("Optional slope-aware cliff contrast & ridge detail relief (0 = disabled, preserves exact raw heightmap).")]
+        [Range(0f, 1.5f)]
+        public float cliffDetailStrength = 0f;
+
+        [Tooltip("Apply optional topographic AO & curvature from terrain_masks.png to the URP Terrain MaskMap when present.")]
+        public bool useTerrainMasks = true;
+
         public TerrainBuildSettings Clone()
         {
             return (TerrainBuildSettings)MemberwiseClone();
+        }
+    }
+
+    /// <summary>
+    /// High-resolution C# CPU/GPU build timings (in milliseconds) for terrain decoding, shaping, normal baking, and upload.
+    /// </summary>
+    [Serializable]
+    public struct TerrainBuildTimings
+    {
+        public double DecodeMs;
+        public double ProcessMs;
+        public double NormalMapMs;
+        public double TerrainUploadMs;
+        public double TotalBuildMs;
+        public int Resolution;
+
+        public override string ToString()
+        {
+            return $"Total {TotalBuildMs:F2} ms (Decode {DecodeMs:F2} ms | Process {ProcessMs:F2} ms | Normal {NormalMapMs:F2} ms | Upload {TerrainUploadMs:F2} ms) @ {Resolution}x{Resolution}";
         }
     }
 
@@ -127,7 +158,8 @@ namespace DepthTerrain
     {
         MultiscaleTTA = 0,
         TTA4_Fast = 1,
-        RawSinglePass = 2
+        RawSinglePass = 2,
+        FastMultiscale = 3
     }
 
     public static class DepthPro2ModelExtensions
@@ -144,6 +176,7 @@ namespace DepthTerrain
         public static string ToCliFlag(this TopDownAdaptationMode mode) => mode switch
         {
             TopDownAdaptationMode.MultiscaleTTA => "multiscale_tta",
+            TopDownAdaptationMode.FastMultiscale => "fast_multiscale",
             TopDownAdaptationMode.TTA4_Fast => "tta4",
             TopDownAdaptationMode.RawSinglePass => "raw",
             _ => "multiscale_tta"

@@ -14,9 +14,11 @@ from .depth_runner import (
     TOPDOWN_MODES,
     VALID_MODELS,
     download_model_weights,
+    get_model_info,
     infer_image_depth,
     infer_video_depth,
     load_local_image,
+    select_best_video_keyframe,
 )
 from .fictional_generator import FICTIONAL_BIOMES, generate_fictional_topdown
 from .heightmap_export import (
@@ -25,6 +27,7 @@ from .heightmap_export import (
     export_unity_terrain_bundle,
 )
 from .map_fetcher import TILE_PROVIDERS, fetch_map_region, geocode_place
+from .server import serve_forever
 
 
 def _common_model_options(fn):
@@ -55,7 +58,7 @@ def _common_model_options(fn):
             type=click.Choice(TOPDOWN_MODES),
             default="multiscale_tta",
             show_default=True,
-            help="Top-down nadir adaptation: multiscale_tta (sharpest), tta4 (fast), or raw.",
+            help="Top-down nadir adaptation: multiscale_tta (sharpest), fast_multiscale (~3x faster), tta4, or raw.",
         ),
         click.option(
             "--resolution",
@@ -69,6 +72,18 @@ def _common_model_options(fn):
         click.option("--gamma", type=float, default=1.0, show_default=True, help="Height curve gamma."),
         click.option("--p-low", type=float, default=2.0, show_default=True, help="Lower percentile clip."),
         click.option("--p-high", type=float, default=98.0, show_default=True, help="Upper percentile clip."),
+        click.option(
+            "--guided-filter/--no-guided-filter",
+            default=False,
+            show_default=True,
+            help="Apply RGB-guided edge-preserving refinement using albedo luminance.",
+        ),
+        click.option(
+            "--export-ply/--no-export-ply",
+            default=False,
+            show_default=True,
+            help="Export metric 3D colored point cloud (pointcloud.ply) using Depth Pro 2 depth & focal length.",
+        ),
         click.option("--save-npz", is_flag=True, help="Also export raw float32 depth & focal length .npz."),
         click.option(
             "-o",
@@ -90,6 +105,8 @@ def _build_export_config(
     gamma: float,
     p_low: float,
     p_high: float,
+    guided_filter: bool,
+    export_ply: bool,
     save_npz: bool,
 ) -> ExportConfig:
     return ExportConfig(
@@ -99,6 +116,8 @@ def _build_export_config(
         gamma=gamma,
         percentile_low=p_low,
         percentile_high=p_high,
+        guided_filter=guided_filter,
+        export_ply=export_ply,
         save_npz=save_npz,
     )
 
@@ -136,6 +155,81 @@ def download_cmd(model: str, all_laptop: bool) -> None:
         for k, p in paths.items():
             size_mb = p.stat().st_size / (1024 * 1024)
             click.echo(f"  [{k}] {p} ({size_mb:.1f} MB)")
+
+
+@main.command("model-info")
+@click.option("--json", "as_json", is_flag=True, help="Print machine-readable JSON output.")
+def model_info_cmd(as_json: bool) -> None:
+    """Inspect cached Depth Pro 2 checkpoints, Apple Silicon MPS, and Core ML readiness."""
+    info = get_model_info()
+    if as_json:
+        click.echo(json.dumps(info, indent=2))
+        return
+
+    plat = info["platform"]
+    acc = info["acceleration"]
+    coreml = info["coreml"]
+    click.echo("Apple Depth Pro 2 Environment & Checkpoint Summary")
+    click.echo(f"  Platform      : {plat['system']} {plat['machine']} (Apple Silicon={plat['appleSilicon']})")
+    click.echo(f"  PyTorch       : {plat['torchVersion']} (MPS={acc['mpsAvailable']}, CUDA={acc['cudaAvailable']})")
+    click.echo(
+        f"  Recommended   : model={acc['recommendedModel']}, device={acc['recommendedDevice']}, "
+        f"precision={acc['recommendedPrecision']}, mode={acc['recommendedTopDownMode']}"
+    )
+    click.echo(f"  Checkpoints   : {info['checkpointsDir']}")
+    for name, ckpt in info["checkpoints"].items():
+        status = f"CACHED ({ckpt['sizeMb']:.1f} MB)" if ckpt["downloaded"] else "not downloaded"
+        fov_str = "fov=ok" if ckpt["fovDownloaded"] else "fov=missing"
+        click.echo(f"    - {name:12s}: {status} [{fov_str}]")
+    click.echo(
+        f"  Core ML       : repo={coreml['repoId']}, coremltools={coreml['coremltoolsInstalled']} "
+        f"(version={coreml['coremltoolsVersion'] or 'n/a'}), appleSiliconReady={coreml['appleSiliconReady']}"
+    )
+    click.echo(f"  Notes         : {coreml['notes']}")
+
+
+@main.command("serve")
+@click.option("--host", type=str, default="127.0.0.1", show_default=True, help="Bind host address.")
+@click.option("--port", type=int, default=8765, show_default=True, help="Bind TCP port.")
+@click.option(
+    "-m",
+    "--model",
+    type=click.Choice(VALID_MODELS),
+    default="depthpro2-b",
+    show_default=True,
+    help="Default Apple Depth Pro 2 model to keep warm in memory.",
+)
+@click.option(
+    "--device",
+    type=click.Choice(["auto", "mps", "cuda", "cpu"]),
+    default="auto",
+    show_default=True,
+    help="Compute device for warm inference server.",
+)
+@click.option(
+    "--precision",
+    type=click.Choice(sorted(PRECISIONS.keys())),
+    default=None,
+    help="Precision override (defaults to bf16 on MPS/CUDA, fp32 on CPU).",
+)
+@click.option("--no-warmup", is_flag=True, help="Skip initial Metal/CUDA shader warmup pass.")
+def serve_cmd(
+    host: str,
+    port: int,
+    model: str,
+    device: str,
+    precision: Optional[str],
+    no_warmup: bool,
+) -> None:
+    """Run a persistent warm HTTP inference server for near-instant Unity requests."""
+    serve_forever(
+        host=host,
+        port=port,
+        model_name=model,
+        device_name=device,
+        precision_name=precision,
+        warmup=not no_warmup,
+    )
 
 
 @main.command("from-map")
@@ -176,6 +270,8 @@ def from_map_cmd(
     gamma: float,
     p_low: float,
     p_high: float,
+    guided_filter: bool,
+    export_ply: bool,
     save_npz: bool,
     output: Path,
 ) -> None:
@@ -216,7 +312,9 @@ def from_map_cmd(
         f"  Depth inferred in {depth_res.inference_ms:.1f} ms on {depth_res.device} ({depth_res.precision})"
     )
 
-    cfg = _build_export_config(resolution, invert, smooth_sigma, gamma, p_low, p_high, save_npz)
+    cfg = _build_export_config(
+        resolution, invert, smooth_sigma, gamma, p_low, p_high, guided_filter, export_ply, save_npz
+    )
     exported = export_unity_terrain_bundle(
         output_dir=output,
         albedo_rgb=map_res.image_rgb,
@@ -231,6 +329,7 @@ def from_map_cmd(
         source_label=map_res.place_label,
         config=cfg,
         extra_metadata={
+            "topDownMode": depth_res.topdown_mode,
             "latitude": map_res.lat,
             "longitude": map_res.lon,
             "zoom": map_res.zoom,
@@ -269,6 +368,8 @@ def from_image_cmd(
     gamma: float,
     p_low: float,
     p_high: float,
+    guided_filter: bool,
+    export_ply: bool,
     save_npz: bool,
     output: Path,
 ) -> None:
@@ -288,7 +389,9 @@ def from_image_cmd(
     )
     click.echo(f"  Depth inferred in {depth_res.inference_ms:.1f} ms on {depth_res.device}")
 
-    cfg = _build_export_config(resolution, invert, smooth_sigma, gamma, p_low, p_high, save_npz)
+    cfg = _build_export_config(
+        resolution, invert, smooth_sigma, gamma, p_low, p_high, guided_filter, export_ply, save_npz
+    )
     exported = export_unity_terrain_bundle(
         output_dir=output,
         albedo_rgb=rgb,
@@ -303,6 +406,7 @@ def from_image_cmd(
         source_label=label or input_path.stem,
         config=cfg,
         extra_metadata={
+            "topDownMode": depth_res.topdown_mode,
             "recommendedTerrainSize": 500.0,
             "recommendedTerrainHeight": 120.0,
             "recommendedWaterLevel": 0.06,
@@ -336,6 +440,8 @@ def from_fictional_cmd(
     gamma: float,
     p_low: float,
     p_high: float,
+    guided_filter: bool,
+    export_ply: bool,
     save_npz: bool,
     output: Path,
 ) -> None:
@@ -359,7 +465,9 @@ def from_fictional_cmd(
         "alpine_peaks": 0.06,
         "canyon_mesa": 0.08,
     }
-    cfg = _build_export_config(resolution, invert, smooth_sigma, gamma, p_low, p_high, save_npz)
+    cfg = _build_export_config(
+        resolution, invert, smooth_sigma, gamma, p_low, p_high, guided_filter, export_ply, save_npz
+    )
     exported = export_unity_terrain_bundle(
         output_dir=output,
         albedo_rgb=fictional.image_rgb,
@@ -374,6 +482,7 @@ def from_fictional_cmd(
         source_label=f"Fictional {biome.replace('_', ' ').title()} (seed {seed})",
         config=cfg,
         extra_metadata={
+            "topDownMode": depth_res.topdown_mode,
             "biome": biome,
             "seed": seed,
             "recommendedTerrainSize": 500.0,
@@ -416,6 +525,8 @@ def from_video_cmd(
     gamma: float,
     p_low: float,
     p_high: float,
+    guided_filter: bool,
+    export_ply: bool,
     save_npz: bool,
     output: Path,
 ) -> None:
@@ -423,7 +534,9 @@ def from_video_cmd(
     click.echo(f"Running Apple Depth Pro 2 ({model}, {mode}) on video {video_path}...")
     frames_dir = output / "frames"
     frames_dir.mkdir(parents=True, exist_ok=True)
-    cfg = _build_export_config(resolution, invert, smooth_sigma, gamma, p_low, p_high, save_npz)
+    cfg = _build_export_config(
+        resolution, invert, smooth_sigma, gamma, p_low, p_high, guided_filter, export_ply, save_npz
+    )
 
     results = list(
         infer_video_depth(
@@ -456,26 +569,30 @@ def from_video_cmd(
             source_type="aerial_video_frame",
             source_label=f"{video_path.stem} [frame {src_idx}]",
             config=cfg,
+            extra_metadata={"topDownMode": depth_res.topdown_mode},
         )
 
-    # Export middle keyframe as root bundle so Unity loads it immediately
-    mid = len(results) // 2
-    _, mid_rgb, mid_depth = results[mid]
+    # Smart keyframe selection: pick sharpest + richest-relief frame as root terrain
+    best_idx = select_best_video_keyframe(results)
+    best_src_idx, key_rgb, key_depth = results[best_idx]
+    click.echo(f"  Selected smart keyframe seq={best_idx} (source frame {best_src_idx}) as root terrain.")
     exported = export_unity_terrain_bundle(
         output_dir=output,
-        albedo_rgb=mid_rgb,
-        depth_m=mid_depth.depth_m,
-        inverse_depth=mid_depth.inverse_depth,
-        focallength_px=mid_depth.focallength_px,
-        model_name=mid_depth.model_name,
-        device=mid_depth.device,
-        precision=mid_depth.precision,
-        inference_ms=mid_depth.inference_ms,
+        albedo_rgb=key_rgb,
+        depth_m=key_depth.depth_m,
+        inverse_depth=key_depth.inverse_depth,
+        focallength_px=key_depth.focallength_px,
+        model_name=key_depth.model_name,
+        device=key_depth.device,
+        precision=key_depth.precision,
+        inference_ms=key_depth.inference_ms,
         source_type="aerial_video",
         source_label=f"{video_path.stem} ({len(results)} frames)",
         config=cfg,
         extra_metadata={
+            "topDownMode": key_depth.topdown_mode,
             "videoFrameCount": len(results),
+            "keyframeIndex": best_idx,
             "recommendedTerrainSize": 500.0,
             "recommendedTerrainHeight": 115.0,
             "recommendedWaterLevel": 0.05,

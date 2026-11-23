@@ -32,6 +32,8 @@ namespace DepthTerrain.Editor
         private int _selectedBiomeIdx;
         private int _selectedSampleIdx;
         private string[] _bundledSamples = Array.Empty<string>();
+        private WarmServerHealth _warmServerHealth = new WarmServerHealth();
+        private bool _checkingServerHealth;
 
         [MenuItem("Tools/Depth Terrain/Depth Pro 2 Studio", priority = 10)]
         public static void ShowWindow()
@@ -46,6 +48,7 @@ namespace DepthTerrain.Editor
         {
             RefreshSamples();
             FindOrBindController();
+            RefreshWarmServerHealthAsync();
         }
 
         private void RefreshSamples()
@@ -58,7 +61,7 @@ namespace DepthTerrain.Editor
         {
             if (_controller == null)
             {
-                _controller = FindFirstObjectByType<DepthTerrainController>();
+                _controller = FindAnyObjectByType<DepthTerrainController>();
             }
         }
 
@@ -276,6 +279,70 @@ namespace DepthTerrain.Editor
                     new[] { 129, 257, 513, 1025 }
                 );
                 _request.smoothSigma = EditorGUILayout.Slider("Pre-Smooth Sigma", _request.smoothSigma, 0f, 4f);
+                _request.useGuidedFilter = EditorGUILayout.Toggle("Guided Filter (Edge-Preserving)", _request.useGuidedFilter);
+                _request.exportPointCloudPly = EditorGUILayout.Toggle("Export Metric Point Cloud (.PLY)", _request.exportPointCloudPly);
+
+                EditorGUILayout.Space(4);
+                DrawWarmServerBar();
+            }
+        }
+
+        private void DrawWarmServerBar()
+        {
+            bool managedRunning = DepthPipelineBridge.IsManagedWarmServerRunning;
+            bool healthy = _warmServerHealth != null && _warmServerHealth.IsHealthy;
+
+            string statusText;
+            if (healthy)
+            {
+                statusText = $"Warm Server: ONLINE ({_warmServerHealth.model} | {_warmServerHealth.device} | {_warmServerHealth.uptimeSeconds:F0}s)";
+            }
+            else if (managedRunning)
+            {
+                statusText = "Warm Server: STARTING (loading Depth Pro 2 into MPS...)";
+            }
+            else
+            {
+                statusText = "Warm Server: OFFLINE (will auto-fallback to uv CLI)";
+            }
+
+            EditorGUILayout.LabelField(statusText, EditorStyles.miniBoldLabel);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                _request.preferWarmServer = EditorGUILayout.ToggleLeft("Prefer Warm Server", _request.preferWarmServer, GUILayout.Width(145));
+
+                if (managedRunning)
+                {
+                    if (GUILayout.Button("Stop Warm Server", GUILayout.Height(22)))
+                    {
+                        DepthPipelineBridge.StopWarmServerProcess();
+                        _warmServerHealth = new WarmServerHealth { IsHealthy = false };
+                        AppendLiveLog("[WarmServer] Stopped managed server process.");
+                    }
+                }
+                else if (!healthy)
+                {
+                    if (GUILayout.Button("Start Warm Server", GUILayout.Height(22)))
+                    {
+                        DepthPipelineBridge.StartWarmServerProcess(
+                            model: _request.model,
+                            device: _request.device,
+                            precision: _request.precision,
+                            pipelineDirectoryOverride: _controller != null ? _controller.customPipelineDirectory : null,
+                            uvExecutableOverride: _controller != null ? _controller.customUvExecutable : null,
+                            onLogLine: AppendLiveLog
+                        );
+                        RefreshWarmServerHealthAsync();
+                    }
+                }
+
+                using (new EditorGUI.DisabledScope(_checkingServerHealth))
+                {
+                    if (GUILayout.Button(_checkingServerHealth ? "..." : "Check", GUILayout.Width(58), GUILayout.Height(22)))
+                    {
+                        RefreshWarmServerHealthAsync();
+                    }
+                }
             }
         }
 
@@ -320,7 +387,9 @@ namespace DepthTerrain.Editor
                 s.invertHeight = EditorGUILayout.Toggle("Invert Depth Polarity", s.invertHeight);
                 s.floorClamp = EditorGUILayout.Slider("Floor Clamp", s.floorClamp, 0f, 0.5f);
                 s.terraceSteps = EditorGUILayout.IntSlider("Terracing Steps", s.terraceSteps, 0, 24);
+                s.cliffDetailStrength = EditorGUILayout.Slider("Cliff Detail Relief", s.cliffDetailStrength, 0f, 1.5f);
                 s.normalMapStrength = EditorGUILayout.Slider("Normal Map Strength", s.normalMapStrength, 0f, 3.5f);
+                s.useTerrainMasks = EditorGUILayout.Toggle("Use Topographic Masks (AO)", s.useTerrainMasks);
                 s.showWaterPlane = EditorGUILayout.Toggle("Show Water Plane", s.showWaterPlane);
                 if (s.showWaterPlane)
                 {
@@ -333,6 +402,16 @@ namespace DepthTerrain.Editor
             {
                 _controller.RebuildTerrainFromCache();
                 SceneView.RepaintAll();
+            }
+
+            if (_controller.LastBuildTimings.Resolution > 0)
+            {
+                var t = _controller.LastBuildTimings;
+                EditorGUILayout.HelpBox(
+                    $"C# Rebuild Telemetry ({t.Resolution}x{t.Resolution}): Total {t.TotalBuildMs:F2} ms " +
+                    $"(Process {t.ProcessMs:F2} ms | NormalMap {t.NormalMapMs:F2} ms | Upload {t.TerrainUploadMs:F2} ms | Decode {t.DecodeMs:F2} ms)",
+                    MessageType.None
+                );
             }
 
             if (GUILayout.Button("Rebuild Terrain & Frame Camera"))
@@ -386,8 +465,32 @@ namespace DepthTerrain.Editor
         {
             if (_controller == null)
             {
-                _controller = FindFirstObjectByType<DepthTerrainController>()
+                _controller = FindAnyObjectByType<DepthTerrainController>()
                     ?? DepthTerrainSceneSetup.CreateOrUpdateShowcaseScene(defaultDataset: "", saveScene: false);
+            }
+        }
+
+        private void AppendLiveLog(string line)
+        {
+            lock (_liveLogs)
+            {
+                _liveLogs.AppendLine(line);
+            }
+            EditorApplication.delayCall += Repaint;
+        }
+
+        private async void RefreshWarmServerHealthAsync()
+        {
+            if (_checkingServerHealth) return;
+            _checkingServerHealth = true;
+            try
+            {
+                _warmServerHealth = await DepthPipelineBridge.CheckWarmServerHealthAsync(_request.warmServerUrl, timeoutMs: 300);
+            }
+            finally
+            {
+                _checkingServerHealth = false;
+                EditorApplication.delayCall += Repaint;
             }
         }
 
@@ -401,15 +504,9 @@ namespace DepthTerrain.Editor
                 $"{_request.sourceMode}_{DateTime.Now:yyyyMMdd_HHmmss}"
             );
 
-            await _controller.GenerateWithDepthPro2Async(_request, line =>
-            {
-                lock (_liveLogs)
-                {
-                    _liveLogs.AppendLine(line);
-                }
-                EditorApplication.delayCall += Repaint;
-            });
+            await _controller.GenerateWithDepthPro2Async(_request, AppendLiveLog);
 
+            RefreshWarmServerHealthAsync();
             SceneView.RepaintAll();
             Repaint();
         }
